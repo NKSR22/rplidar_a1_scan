@@ -1,4 +1,4 @@
-<library path="src">
+<library path="rqt_rplidar_plot">
   <class name="RPLIDAR Plot" type="rqt_rplidar_plot.rplidar_plot.RPLidarPlotPlugin" base_class_type="rqt_gui_py::Plugin">
     <description>
       An rqt plugin to visualize RPLIDAR laser scan data in real-time.

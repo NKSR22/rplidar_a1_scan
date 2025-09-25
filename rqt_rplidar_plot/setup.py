@@ -1,11 +1,11 @@
-from setuptools import find_packages, setup
+from setuptools import setup
 
 package_name = 'rqt_rplidar_plot'
 
 setup(
     name=package_name,
     version='1.0.0',
-    packages=find_packages(where='src'),
+    packages=[package_name],
     package_dir={'': 'src'},
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -21,8 +21,6 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-            'rqt_rplidar_plot = rqt_rplidar_plot.main:main',
-        ],
+        'console_scripts': [],
     },
 )

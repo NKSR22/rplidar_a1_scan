@@ -11,12 +11,12 @@ This package provides an `rqt` plugin to visualize `sensor_msgs/LaserScan` data 
 This plugin is designed for stability and performance, especially when handling high-frequency sensor data.
 ปลั๊กอินนี้ถูกออกแบบมาเพื่อความเสถียรและประสิทธิภาพ โดยเฉพาะเมื่อต้องจัดการกับข้อมูลจากเซ็นเซอร์ที่มีความถี่สูง
 
-*   **GUI Framework:** The user interface is built with **PyQt5**, and the plotting is handled by **Matplotlib**, which is embedded within a `QWidget`.
-    *   *GUI ถูกสร้างด้วย **PyQt5** และการพล็อตกราฟใช้ **Matplotlib** ซึ่งถูกฝังอยู่ใน `QWidget`*
-*   **ROS 2 Integration:** A ROS 2 node (`rplidar_plot_node`) is created within the plugin to subscribe to the `/scan` topic.
-    *   *มีการสร้าง ROS 2 node (`rplidar_plot_node`) ภายในปลั๊กอินเพื่อ subscribe topic `/scan`*
-*   **Real-time & Non-blocking UI:** To prevent the GUI from freezing, the ROS 2 subscriber runs in a separate `threading.Thread`. The GUI is updated at a fixed rate (~30 Hz) using a `QTimer`, which reads the latest available data and redraws the plot. This decoupling is crucial for a smooth user experience.
-    *   *เพื่อป้องกันไม่ให้ GUI ค้าง, ROS 2 subscriber จะทำงานใน `threading.Thread` ที่แยกออกมา ส่วน GUI จะถูกอัปเดตด้วยความถี่คงที่ (~30 Hz) โดยใช้ `QTimer` ซึ่งจะดึงข้อมูลล่าสุดมาวาดใหม่ การแยกการทำงานสองส่วนนี้ออกจากกันเป็นหัวใจสำคัญที่ทำให้โปรแกรมทำงานได้อย่างราบรื่น*
+*   **GUI Framework:** The user interface is built with **PyQt5**, and the plotting is handled by **PyQtGraph**, a library optimized for high-performance, real-time scientific plotting.
+    *   *GUI ถูกสร้างด้วย **PyQt5** และการพล็อตกราฟใช้ **PyQtGraph** ซึ่งเป็นไลบรารีที่ถูกออกแบบมาเพื่อการพล็อตทางวิทยาศาสตร์แบบ real-time ประสิทธิภาพสูงโดยเฉพาะ*
+*   **ROS 2 Integration:** The plugin uses the ROS 2 node provided by the `rqt` context. This ensures proper integration and lifecycle management within the `rqt` framework.
+    *   *ปลั๊กอินนี้ใช้ ROS 2 node ที่ `rqt` framework จัดการและส่งมาให้ ซึ่งเป็นวิธีมาตรฐานที่ทำให้การทำงานและจัดการ life cycle ถูกต้องสมบูรณ์*
+*   **Real-time & Non-blocking UI:** The GUI is updated at a fixed rate (~30 Hz) using a `QTimer`. This reads the latest data received by the subscriber and redraws the plot, ensuring a smooth user experience without blocking the GUI thread.
+    *   *GUI จะถูกอัปเดตด้วยความถี่คงที่ (~30 Hz) โดยใช้ `QTimer` ซึ่งจะดึงข้อมูลล่าสุดที่ subscriber ได้รับมาวาดใหม่ การแยกส่วนนี้ช่วยป้องกันไม่ให้ GUI ค้างและทำให้โปรแกรมทำงานได้อย่างราบรื่น*
 *   **QoS Profile:** The subscriber uses the `qos_profile_sensor_data` profile, which is standard for sensor data, ensuring reliable communication.
     *   *Subscriber ใช้ `qos_profile_sensor_data` ซึ่งเป็นโปรไฟล์มาตรฐานสำหรับข้อมูลจากเซ็นเซอร์ เพื่อให้การสื่อสารมีความน่าเชื่อถือ*
 
@@ -37,7 +37,7 @@ First, ensure you have the necessary ROS 2 packages and Python libraries.
 ```bash
 sudo apt-get update
 # Install rplidar driver, rqt, and python dependencies
-sudo apt-get install ros-humble-rplidar-ros ros-humble-rqt python3-pyqt5 python3-matplotlib
+sudo apt-get install ros-humble-rplidar-ros ros-humble-rqt python3-pyqt5 python3-pyqtgraph
 ```
 
 ### 2.2. Set Up a ROS 2 Workspace / ตั้งค่า Workspace ของ ROS 2
@@ -99,19 +99,13 @@ ros2 launch rplidar_ros rplidar_a1_launch.py
 In a second terminal, you can run the plugin in two ways:
 ใน terminal ที่สอง, คุณสามารถรัน plugin ได้ 2 วิธี:
 
-**Method A: As part of the `rqt` GUI / วิธี A: รันเป็นส่วนหนึ่งของ `rqt`**
+**Run the RQT Plugin / รัน RQT Plugin**
 
 1.  Run `rqt`:
     ```bash
     rqt
     ```
 2.  From the menu, navigate to `Plugins` > `Visualization` > `RPLIDAR Plot`.
-
-**Method B: As a standalone application / วิธี B: รันแบบ Standalone**
-
-```bash
-rqt --standalone rqt_rplidar_plot
-```
 
 You should now see a window displaying the real-time scan data from your RPLIDAR.
 คุณจะเห็นหน้าต่างที่แสดงผลข้อมูลการสแกนจาก RPLIDAR ของคุณแบบ real-time

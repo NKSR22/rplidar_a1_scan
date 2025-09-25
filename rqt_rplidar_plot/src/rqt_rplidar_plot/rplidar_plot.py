@@ -6,8 +6,8 @@ class RPLidarPlotPlugin(Plugin):
         super(RPLidarPlotPlugin, self).__init__(context)
         self.setObjectName('RPLidarPlotPlugin')
 
-        # Create the main widget
-        self._widget = RPLidarPlotWidget()
+        # Pass the ROS 2 node from the context to the widget
+        self._widget = RPLidarPlotWidget(context.node)
 
         if context.serial_number() > 1:
             self._widget.setWindowTitle(self._widget.windowTitle() + (' (%d)' % context.serial_number()))
@@ -16,8 +16,8 @@ class RPLidarPlotPlugin(Plugin):
         context.add_widget(self._widget)
 
     def shutdown_plugin(self):
-        # This method is called when the plugin is closed
-        self._widget.shutdown()
+        # The shutdown logic is now handled by the widget's destructor
+        pass
 
     # The following methods are not used in this simple plugin,
     # but are good practice to include.

@@ -7,39 +7,36 @@ from sensor_msgs.msg import LaserScan
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtCore import QTimer
 
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-
+import pyqtgraph as pg
 import numpy as np
 import threading
-import math
 
 class RPLidarPlotWidget(QWidget):
-    def __init__(self):
+    def __init__(self, node: Node):
         super(RPLidarPlotWidget, self).__init__()
-        self.setWindowTitle('RPLIDAR Plot')
+        self.setWindowTitle('RPLIDAR Plot (PyQtGraph)')
 
-        # Matplotlib Figure
-        self.fig = Figure(figsize=(5, 5), dpi=100)
-        self.ax = self.fig.add_subplot(111, polar=True)
-        self.canvas = FigureCanvas(self.fig)
-        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.node = node
+
+        # PyQtGraph Plot Widget
+        self.plot_widget = pg.PlotWidget()
+        self.plot_item = self.plot_widget.getPlotItem()
+        self.plot_item.setAspectLocked(True)
+        self.plot_item.showGrid(x=True, y=True)
+        self.plot_item.setTitle("RPLIDAR Scan")
+
+        self.scatter = pg.ScatterPlotItem(pen=None, brush=pg.mkBrush(255, 255, 255, 120), size=3)
+        self.plot_item.addItem(self.scatter)
 
         # Layout
         layout = QVBoxLayout()
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.canvas)
+        layout.addWidget(self.plot_widget)
         self.setLayout(layout)
 
         # Data storage and lock
-        self._ranges = []
-        self._angles = []
+        self._ranges = np.array([])
+        self._angles = np.array([])
         self._lock = threading.Lock()
-
-        # ROS 2 Node and Subscriber
-        self.node = Node('rplidar_plot_node')
 
         # Use sensor data QoS profile
         qos_profile = QoSProfile(
@@ -48,15 +45,12 @@ class RPLidarPlotWidget(QWidget):
             depth=1
         )
 
+        # Create subscriber on the node passed from the plugin context
         self.subscription = self.node.create_subscription(
             LaserScan,
             'scan',
             self._scan_callback,
             qos_profile)
-
-        # Thread for spinning ROS node
-        self.ros_thread = threading.Thread(target=rclpy.spin, args=(self.node,), daemon=True)
-        self.ros_thread.start()
 
         # QTimer for updating the plot
         self.timer = QTimer()
@@ -67,34 +61,27 @@ class RPLidarPlotWidget(QWidget):
     def _scan_callback(self, msg):
         with self._lock:
             self._ranges = np.array(msg.ranges)
-            # Filter out infinity values
-            self._ranges[np.isinf(self._ranges)] = 0.0
+            valid_indices = np.isfinite(self._ranges) & (self._ranges > 0)
 
-            # Create corresponding angles
-            self._angles = np.linspace(msg.angle_min, msg.angle_max, len(msg.ranges))
+            # Use a temporary variable for linspace to avoid shape mismatch
+            num_points = len(msg.ranges)
+            all_angles = np.linspace(msg.angle_min, msg.angle_max, num_points)
+
+            self._ranges = self._ranges[valid_indices]
+            self._angles = all_angles[valid_indices]
 
     def _update_plot(self):
         with self._lock:
-            # Make a copy to avoid holding the lock while plotting
             ranges = self._ranges
             angles = self._angles
 
         if len(ranges) == 0:
             return
 
-        self.ax.clear()
-        self.ax.scatter(angles, ranges, s=1) # s is marker size
-        self.ax.set_theta_zero_location('N') # Set 0 degrees to the top
-        self.ax.set_theta_direction(-1) # Clockwise
-        self.ax.set_rmax(np.max(ranges) * 1.1) # Set radial limit
-        self.ax.set_title("RPLIDAR Scan", va='bottom')
-        self.canvas.draw()
+        x = ranges * np.cos(angles)
+        y = ranges * np.sin(angles)
 
-    def shutdown(self):
-        self.timer.stop()
-        if self.node:
-            self.node.destroy_node()
-        # rclpy.shutdown() is not called here because rqt manages the context
-        # and shutting it down would break other plugins.
-        self.ros_thread.join()
-        self.node = None
+        self.scatter.setData(x=x, y=y)
+
+    # No shutdown method is needed as the node lifecycle is managed by rqt
+    # The QTimer will be garbage collected with the widget.
