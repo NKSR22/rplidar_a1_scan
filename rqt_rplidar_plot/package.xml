@@ -1,20 +1,22 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>rso2_lidar_scanner</name>
+  <name>rqt_rplidar_plot</name>
   <version>1.0.0</version>
-  <description>
-    ROS 2 package to launch the rplidar_ros driver and a subscriber to read scan data.
-    โปรเจค ROS 2 สำหรับเปิดใช้งาน rplidar_ros driver และ node สำหรับอ่านข้อมูลการสแกน
-  </description>
+  <description>An rqt plugin to visualize RPLIDAR laser scan data in real-time.</description>
   <maintainer email="dev@example.com">Jules</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
 
   <depend>rclpy</depend>
-  <depend>rplidar_ros</depend>
+  <depend>rqt_gui</depend>
+  <depend>rqt_gui_py</depend>
   <depend>sensor_msgs</depend>
+
+  <exec_depend>python3-pyqt5</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>rplidar_ros</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
@@ -23,5 +25,6 @@
 
   <export>
     <build_type>ament_python</build_type>
+    <rqt_gui plugin="${prefix}/plugin.xml"/>
   </export>
 </package>
